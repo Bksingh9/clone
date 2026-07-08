@@ -1,20 +1,7 @@
-# FeedbackOS Live Demo
+# FeedbackOS
 
-This repository hosts the user-facing FeedbackOS demo on GitHub Pages.
+Live app: https://bksingh9.github.io/clone/
 
-Live URL, once GitHub Pages finishes deploying:
+This public GitHub Pages app starts with no seeded records. Users create surveys and submit responses from their own browser session. Data is stored in browser localStorage for this static live deployment.
 
-https://bksingh9.github.io/clone/
-
-The demo includes:
-
-- Command center
-- Survey builder
-- Live response capture
-- Response inbox
-- Analytics digest
-- Integration cards
-- Pricing
-- Launch checklist
-
-The full Vinext/Sites-ready app remains in the Codex workspace and is validated with typecheck, lint, build, and smoke tests.
+For shared multi-user production storage, deploy the full app to a server-capable host and connect database, auth, billing, and integration credentials.
