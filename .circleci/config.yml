@@ -1,0 +1,78 @@
+version: 2.1
+
+executors:
+  base:
+    docker:
+      - image: cimg/base:stable
+    resource_class: small
+
+jobs:
+  validate_static:
+    executor: base
+    steps:
+      - checkout
+      - run:
+          name: Validate static app contract
+          command: |
+            test -f index.html
+            grep -q '<title>FeedbackOS</title>' index.html
+            grep -q 'feedbackos-live-clean-v1' index.html
+            grep -q 'Create survey' index.html
+            grep -q 'Submit response' index.html
+            grep -q 'Response inbox' index.html
+            grep -q 'Average score' index.html
+            grep -q 'No seeded data' index.html
+            grep -q 'No fake connection' index.html
+            if grep -Eiq 'Ava Chen|Rahul Mehta|Marta Silva|ava@|rahul@|marta@' index.html; then
+              echo 'Seeded demo data found in production HTML.'
+              exit 1
+            fi
+  verify_production:
+    executor: base
+    steps:
+      - checkout
+      - run:
+          name: Verify live GitHub Pages deployment
+          command: |
+            LIVE_URL="${FEEDBACKOS_PRODUCTION_URL:-https://bksingh9.github.io/clone/}"
+            curl -fsSL "$LIVE_URL" -o feedbackos-live.html
+            grep -q '<title>FeedbackOS</title>' feedbackos-live.html
+            grep -q 'feedbackos-live-clean-v1' feedbackos-live.html
+            grep -q 'No seeded data' feedbackos-live.html
+            grep -q 'No fake connection' feedbackos-live.html
+            if grep -Eiq 'Ava Chen|Rahul Mehta|Marta Silva|ava@|rahul@|marta@' feedbackos-live.html; then
+              echo 'Seeded demo data found on live production page.'
+              exit 1
+            fi
+            echo "Production verified at $LIVE_URL"
+
+workflows:
+  validate:
+    jobs:
+      - validate_static
+
+  release:
+    jobs:
+      - validate_static:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - approve_production:
+          type: approval
+          requires:
+            - validate_static
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - verify_production:
+          requires:
+            - approve_production
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
